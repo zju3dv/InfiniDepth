@@ -23,16 +23,13 @@
   <a href="https://haotongl.github.io/">Haotong Lin*</a> •
   <a href="https://github.com/PLUS-WAVE">Jiawei Wang*</a> •
   <a href="https://github.com/Dustbin-Li">Jiaxin Li</a> •
-  <a href="https://wangyida.github.io/">Yida Wang</a>
+  <a href="https://wangyida.github.io/">Yida Wang</a> •
   <a href="#">Xueyang Zhang</a> •
   <a href="https://ywang-zju.github.io/">Yue Wang</a> <br>
   <a href="https://www.xzhou.me/">Xiaowei Zhou</a> •
   <a href="https://csse.szu.edu.cn/staff/ruizhenhu/">Ruizhen Hu</a> •
   <a href="https://pengsida.net/">Sida Peng</a>
 </p>
-
-
-<video src="assets/teaser.mov" controls></video>
 
 </div>
 
