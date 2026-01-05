@@ -32,7 +32,7 @@
 </p>
 
 
-<video src="/nas2/home/yuhao/code/InfiniDepth/assets/teaser.mov" controls></video>
+<video src="assets/teaser.mov" controls></video>
 
 </div>
 
