@@ -40,7 +40,7 @@
 
 ## 📢 News
 
-> **[2026-01]** 🎉 InfiniDepth paper released on arXiv! Code coming soon!
+<!-- > **[2026-01]** 🎉 InfiniDepth paper released on arXiv! Code coming soon! -->
 
 
 ## ✨ Highlights
@@ -53,7 +53,7 @@
 
 <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Globe%20Showing%20Americas.png" alt="Arbitrary Resolution Depth Map" width="80" height="80" />
 
-### 🎨 Arbitrary-Resolution and Fine-Grained
+### 🎨 Arbitrary-Resolution
 ```
 4K • 8K • 16K • Beyond
 ```
@@ -61,7 +61,7 @@
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Microscope.png" alt="Accurate and Fine-Grained Metric Depth" width="80" height="80" />
+<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Microscope.png" alt="Accurate Metric Depth" width="80" height="80" />
 
 ### 📐 Accurate Metric Depth
 
