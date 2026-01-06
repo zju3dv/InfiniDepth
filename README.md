@@ -10,7 +10,7 @@
   <a href="">
     <img src="https://img.shields.io/badge/arXiv-2601.07955-b31b1b.svg?style=for-the-badge" alt="arXiv">
   </a>
-  <a href="https://ritianyu.github.io/infinidepth">
+  <a href="https://zju3dv.github.io/InfiniDepth">
     <img src="https://img.shields.io/badge/Project-Page-green.svg?style=for-the-badge" alt="Project Page">
   </a>
   <a href="LICENSE">
@@ -141,6 +141,11 @@ Hight-Quality • Large Viewpoint Shifts
 </details>
 
 
+## 🙏 Acknowledgments
+
+We thank <a href="https://yuanhongyu.xyz/" target="_blank">Yuanhong Yu</a>, <a href="https://gangweix.github.io/" target="_blank">Gangwei Xu</a> and <a href="https://github.com/ghy0324" target="_blank">Haoyu Guo</a> for their insightful discussions and valuable suggestions, and <a href="https://zhenx.me/" target="_blank">Zhen Xu</a> for his dedicated efforts in curating the synthetic data.
+
+
 ## 📖 Citation
 
 If you find InfiniDepth useful in your research, please consider citing:
@@ -153,19 +158,6 @@ If you find InfiniDepth useful in your research, please consider citing:
     year={2026}
 }
 ```
-
-
-## 🙏 Acknowledgments
-
-We thank <a href="https://yuanhongyu.xyz/" target="_blank">Yuanhong Yu</a>, <a href="https://gangweix.github.io/" target="_blank">Gangwei Xu</a> and <a href="https://github.com/ghy0324" target="_blank">Haoyu Guo</a> for their insightful discussions and valuable suggestions, and <a href="https://zhenx.me/" target="_blank">Zhen Xu</a> for his dedicated efforts in curating the synthetic data.
-
-
-
-## 📄 License
-
-This project will be released under the [Apache 2.0 License](LICENSE).
-
-
 ---
 
 <div align="center">
