@@ -33,7 +33,11 @@
 
 </div>
 
+<div align="center">
 
+<img src="assets/demo.gif" alt="InfiniDepth Demo" width="90%" />
+
+</div>
 
 ## 📢 News
 
