@@ -143,7 +143,7 @@ Hight-Quality • Large Viewpoint Shifts
 
 ## 🙏 Acknowledgments
 
-We thank <a href="https://yuanhongyu.xyz/" target="_blank">Yuanhong Yu</a>, <a href="https://gangweix.github.io/" target="_blank">Gangwei Xu</a> and <a href="https://github.com/ghy0324" target="_blank">Haoyu Guo</a> for their insightful discussions and valuable suggestions, and <a href="https://zhenx.me/" target="_blank">Zhen Xu</a> for his dedicated efforts in curating the synthetic data.
+We thank <a href="https://yuanhongyu.xyz/" target="_blank">Yuanhong Yu</a>, <a href="https://gangweix.github.io/" target="_blank">Gangwei Xu</a>, <a href="https://github.com/ghy0324" target="_blank">Haoyu Guo</a>  and <a href="https://hugoycj.github.io/" target="_blank">Chongjie Ye</a> for their insightful discussions and valuable suggestions, and <a href="https://zhenx.me/" target="_blank">Zhen Xu</a> for his dedicated efforts in curating the synthetic data.
 
 
 ## 📖 Citation
