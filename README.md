@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://arxiv.org/abs/2601.03252">
-    <img src="https://img.shields.io/badge/arXiv-2601.06-b31b1b.svg?style=for-the-badge" alt="arXiv">
+    <img src="https://img.shields.io/badge/arXiv-2601.03252-b31b1b.svg?style=for-the-badge" alt="arXiv">
   </a>
   <a href="https://zju3dv.github.io/InfiniDepth">
     <img src="https://img.shields.io/badge/Project-Page-green.svg?style=for-the-badge" alt="Project Page">
