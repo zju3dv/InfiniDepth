@@ -1,0 +1,80 @@
+# PyTorch and related packages
+# --extra-index-url https://download.pytorch.org/whl/cu128
+# torch>=2.1.0
+# torchvision
+# torchaudio
+# xformers
+
+# Transformers and AI models
+huggingface-hub
+timm
+lpips
+tyro
+
+# Data processing and scientific computing
+numpy<2.0
+einops>=0.4.1
+h5py
+omegaconf
+dacite
+hydra-core
+
+# Computer vision and graphics
+opencv-python
+scikit-image
+imageio
+imageio[ffmpeg]
+moviepy==1.0.3
+matplotlib
+plyfile
+open3d
+OpenEXR
+
+# 3D
+viser
+e3nn
+roma
+
+# Metrics and evaluation
+torchmetrics
+fvcore
+iopath
+lpips
+
+# Training frameworks
+pytorch_lightning
+
+# Logging and monitoring
+wandb
+tensorboard
+rich
+tqdm
+colorama
+termcolor
+
+# Utilities
+jaxtyping
+beartype
+bidict
+tabulate
+svg.py
+sk-video
+ipdb
+pdbr
+ffmpeg-python
+colorspacious
+regex
+
+# simple skymask
+onnxruntime
+
+gradio>=4.44.0
+huggingface_hub>=0.24.0
+plotly>=5.22.0
+spaces
+trimesh>=4.4.0
+
+# waymo dataset
+protobuf==3.20.2
+# Optional local dependency (install manually if needed for Waymo parsing):
+# scripts/waymo/simple-waymo-open-dataset-reader
