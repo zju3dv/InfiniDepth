@@ -287,7 +287,7 @@ bash example_scripts/infer_gs/waymo_infinidepth_depthsensor_gs.sh
 </details>
 
 <details>
-<summary><strong>4.Common Argument Conventions</strong></summary>
+<summary><strong>4. Common Argument Conventions</strong></summary>
 
 | Argument | Used in | Description |
 | --- | --- | --- |
