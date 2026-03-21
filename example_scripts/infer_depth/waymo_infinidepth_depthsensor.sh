@@ -1,8 +1,8 @@
 python inference_depth.py \
   --input_image_path=example_data/image/waymo_002.png \
   --input_depth_path=example_data/depth/waymo_002.npy \
-  --model_type=InfiniDepth_DC \
-  --depth_model_path=checkpoints/depth/infinidepth_dc.ckpt \
+  --model_type=InfiniDepth_DepthSensor \
+  --depth_model_path=checkpoints/depth/infinidepth_depthsensor.ckpt \
   --fx_org=2083.91 \
   --fy_org=2083.91 \
   --cx_org=957.29 \

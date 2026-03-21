@@ -31,8 +31,8 @@ class DepthInferenceArgs:
     save_pcd: bool = True
 
     # Model
-    model_type: str = "InfiniDepth_DC"  # [InfiniDepth, InfiniDepth_DC]
-    depth_model_path: str = "checkpoints/depth/infinidepth_dc.ckpt"
+    model_type: str = "InfiniDepth_DepthSensor"  # [InfiniDepth, InfiniDepth_DepthSensor]
+    depth_model_path: str = "checkpoints/depth/infinidepth_depthsensor.ckpt"
     moge2_pretrained: str = "checkpoints/moge-2-vitl-normal/model.pt"  # Metric depth via MoGe-2 (used when input_depth_path is None)
 
     # Camera intrinsics
@@ -73,8 +73,8 @@ def main(args: DepthInferenceArgs) -> None:
     org_img, image, (org_h, org_w) = load_image(args.input_image_path, args.input_size)
     image = image.to(device)
 
-    if args.model_type == "InfiniDepth_DC":
-        assert args.input_depth_path is not None and os.path.exists(args.input_depth_path), "InfiniDepth_DC requires a valid input depth map for depth completion. Please provide --input_depth_path."
+    if args.model_type == "InfiniDepth_DepthSensor":
+        assert args.input_depth_path is not None and os.path.exists(args.input_depth_path), "InfiniDepth_DepthSensor requires a valid input depth map for depth completion. Please provide --input_depth_path."
 
     gt_depth, prompt_depth, gt_depth_mask, use_gt_depth, moge2_intrinsics = prepare_metric_depth_inputs(
         input_depth_path=args.input_depth_path,

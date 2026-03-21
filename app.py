@@ -72,17 +72,17 @@ APP_ROOT = Path(__file__).resolve().parent
 EXAMPLES_DIR = APP_ROOT / "example_huggingface"
 INPUT_SIZE = (768, 1024)
 APP_NAME = "infinidepth-hf-demo"
-MODEL_CHOICES = ["InfiniDepth", "InfiniDepth_DC"]
+MODEL_CHOICES = ["InfiniDepth", "InfiniDepth_DepthSensor"]
 OUTPUT_MODE_CHOICES = ["upsample", "original", "specific"]
 
 LOCAL_MODEL_PATHS = {
     "InfiniDepth": APP_ROOT / "checkpoints/depth/infinidepth.ckpt",
-    "InfiniDepth_DC": APP_ROOT / "checkpoints/depth/infinidepth_dc.ckpt",
+    "InfiniDepth_DepthSensor": APP_ROOT / "checkpoints/depth/infinidepth_depthsensor.ckpt",
 }
 HF_REPO_ID = "ritianyu/InfiniDepth"
 HF_DEPTH_FILENAMES = {
     "InfiniDepth": "infinidepth.ckpt",
-    "InfiniDepth_DC": "infinidepth_dc.ckpt",
+    "InfiniDepth_DepthSensor": "infinidepth_depthsensor.ckpt",
 }
 LOCAL_MOGE2_PATH = APP_ROOT / "checkpoints/moge-2-vitl-normal/model.pt"
 HF_MOGE2_FILENAME = "moge2.pt"
@@ -228,7 +228,7 @@ def _load_example_image(example_name: str) -> tuple[np.ndarray, Optional[str], O
     if depth_path is not None:
         preview, depth_msg = preview_depth_file(depth_path)
         detail = f"Loaded example `{case.name}` with paired depth. {depth_msg}"
-        model_type = "InfiniDepth_DC"
+        model_type = "InfiniDepth_DepthSensor"
 
     return image_rgb, depth_path, preview, model_type, detail
 
@@ -268,8 +268,8 @@ def _run_inference(
     _ensure_cuda()
     if image is None:
         raise gr.Error("Upload an image or load an example before running inference.")
-    if model_type == "InfiniDepth_DC" and not depth_file:
-        raise gr.Error("InfiniDepth_DC requires an input depth file.")
+    if model_type == "InfiniDepth_DepthSensor" and not depth_file:
+        raise gr.Error("InfiniDepth_DepthSensor requires an input depth file.")
 
     skyseg_path = _resolve_skyseg_path() if enable_skyseg_model else None
 
@@ -400,7 +400,7 @@ def _clear_outputs():
 with gr.Blocks(css=CSS, theme=gr.themes.Soft()) as demo:
     gr.Markdown("# InfiniDepth Demo")
     gr.Markdown(
-        "Infer depth with `InfiniDepth` or `InfiniDepth_DC`, preview the exported point cloud with a Pixel-Perfect-Depth style `Model3D` viewer, and download all generated assets."
+        "Infer depth with `InfiniDepth` or `InfiniDepth_DepthSensor`, preview the exported point cloud with a Pixel-Perfect-Depth style `Model3D` viewer, and download all generated assets."
     )
 
     with gr.Row():

@@ -333,8 +333,8 @@ class _BaseInfiniDepthModel(nn.Module):
         return depthmap, dino_tokens, query_3d_uniform_coord, pred_depth_3d
 
 
-@register_model("InfiniDepth_DC")
-class InfiniDepth_DC(_BaseInfiniDepthModel):
+@register_model("InfiniDepth_DepthSensor")
+class InfiniDepth_DepthSensor(_BaseInfiniDepthModel):
     def _init_variant_modules(self):
         self.prompt_model = GeneralPromptModel(
             prompt_stage=[3],
@@ -365,7 +365,7 @@ class InfiniDepth_DC(_BaseInfiniDepthModel):
             or state.gt_depth_mask is None
         ):
             raise ValueError(
-                "InfiniDepth_DC inference requires gt_depth, gt_depth_mask, prompt_depth, and prompt_mask."
+                "InfiniDepth_DepthSensor inference requires gt_depth, gt_depth_mask, prompt_depth, and prompt_mask."
             )
         prompt_depth, prompt_mask, reference_meta = self.warp_func.warp(
             state.prompt_depth,
@@ -386,7 +386,7 @@ class InfiniDepth_DC(_BaseInfiniDepthModel):
         state: _InferenceState,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         if state.reference_meta is None:
-            raise ValueError("reference_meta is required for InfiniDepth_DC postprocessing.")
+            raise ValueError("reference_meta is required for InfiniDepth_DepthSensor postprocessing.")
         pred = self.warp_func.unwarp(
             pred,
             reference_meta=state.reference_meta[..., 0],

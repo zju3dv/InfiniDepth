@@ -41,113 +41,35 @@
 </div>
 
 ## 📢 News
-> **[2026-03]** 🎉 Inference code of InfiniDepth (RGB Only & Sparse Depth Completion) is available now!
+> **[2026-03]** 🎉 Inference code of InfiniDepth (RGB Only & Depth Sensor Augmentation) is available now!
 
 > **[2026-02]** 🎉 InfiniDepth has been accepted to CVPR 2026! Code coming soon!
 
 
-## ✨ Highlights
+## ✨ What can InfiniDepth do?
+InfiniDepth supports three practical capabilities for single-image 3D perception and reconstruction:
 
-<div align="center">
+| Capability | Input | Output |
+| --- | --- | --- |
+| Monocular & Arbitrary-Resolution Depth Estimation | RGB Image | Arbitrary-Resolution Depth Map |
+| Monocular View Synthesis | RGB Image | 3D Gaussian Splatting (3DGS) |
+| Depth Sensor Augmentation (Monocular Metric Depth Estimation) | RGB Image + Depth Sensor | Metric Depth + 3D Gaussian Splatting (3DGS) |
 
-<table>
-<tr>
-<td width="33%" align="center" valign="top">
+## ⚙️ Installation
 
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Globe%20Showing%20Americas.png" alt="Arbitrary Resolution Depth Map" width="80" height="80" />
-
-### 🎨 Arbitrary-Resolution
-```
-4K • 8K • 16K • Beyond
-```
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Microscope.png" alt="Accurate Metric Depth" width="80" height="80" />
-
-### 📐 Accurate Metric Depth
-
-
-```
-Sparse Depth Prompts → Dense Accuracy
-```
-
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Single-View Novel View Synthesis" width="80" height="80" />
-
-### 📷 Single-View NVS
-
-```
-Hight-Quality • Large Viewpoint Shifts
-```
-
-</td>
-</tr>
-</table>
-
-</div>
-
-## 🛠️ Environment & Checkpoints
-
-### 1) Create environment ([miniforge](https://github.com/conda-forge/miniforge) is recommended)
-
-If using `conda`, replace `mamba` with `conda` in the following commands, AND change channel to `conda-forge` for gxx installation:
-```bash
-mamba create -n infinidepth python=3.10
-mamba activate infinidepth
-
-# Optional: When gsplat compilation fails due to g++ version or CUDA toolkit issues.
-# mamba install gxx=10
-# mamba install nvidia/label/cuda-12.8.0::cuda-toolkit -c nvidia/label/cuda-12.8.0
-# export CUDA_HOME=$CONDA_PREFIX
-```
-
-### 2) Install dependencies
-
-```bash
-# Create environment
-pip install uv
-
-# Install PyTorch with CUDA 12.8
-uv pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 xformers==0.0.33.post1 --index-url https://download.pytorch.org/whl/cu128
-
-# Install package dependencies
-uv pip install -r requirements.txt
-
-# Install MoGe (For scale restoration)
-uv pip install git+https://github.com/microsoft/MoGe.git
-
-# Install gsplat (For Gaussian Splatting)
-uv pip install git+https://github.com/nerfstudio-project/gsplat.git
-```
-
-
-### 3) Download checkpoints
-
-Download checkpoints and then place them under `checkpoints/depth`, `checkpoints/gs`, `checkpoints/moge-2-vitl-normal`, and `checkpoints/sky`.
-
-#### Model Zoo
-
-| Category | Model | Use Case | Download |
-|---|---|---|---|
-| Depth | `InfiniDepth` | Relative Depth Inference (RGB) | [infinidepth.ckpt](https://huggingface.co/ritianyu/InfiniDepth/tree/main) |
-| Depth | `InfiniDepth_DC` | Metric Depth Inference (RGB + Sparse Depth) | [infinidepth_dc.ckpt](https://huggingface.co/ritianyu/InfiniDepth/tree/main) |
-| Depth | `MoGe-2` | For scale restoration | [model.pt](https://huggingface.co/Ruicheng/moge-2-vitl-normal) |
-| GS | `InfiniDepth_GS` | Gaussian Inference (RGB) | [infinidepth_gs.ckpt](https://huggingface.co/ritianyu/InfiniDepth/tree/main) |
-| GS | `InfiniDepth_DC_GS` | Gaussian inference (RGB + Sparse Depth)| [infinidepth_dc_gs.ckpt](https://huggingface.co/ritianyu/InfiniDepth/tree/main) |
-| Sky | `Sky_Mask` | Sky Segmentation | [skyseg.onnx](https://huggingface.co/ritianyu/InfiniDepth/tree/main) |
+Please see [INSTALL.md](INSTALL.md) for manual installation.
 
 ## 🤗 Hugging Face Space Demo
 
-This repo includes a Gradio Space entrypoint at `app.py` for depth inference:
+If you want to test InfiniDepth before running local CLI inference, start with the hosted demo:
+
+- Hugging Face Space: https://huggingface.co/spaces/ritianyu/InfiniDepth
+
+This repo also includes a Gradio Space entrypoint at `app.py`:
 
 - input: RGB image (required), depth map (optional)
-- outputs: colorized depth map + interactive point cloud + downloadable `.ply`
-- model switch: `InfiniDepth` / `InfiniDepth_DC`
+- Feature Switch: `Depth` / `3DGS`
+- Model Switch: `InfiniDepth` / `InfiniDepth_DepthSensor`
 
 ### Local run
 
@@ -157,38 +79,40 @@ python app.py
 
 ### Notes
 
-- In this demo, `InfiniDepth_DC` requires a depth map input; RGB-only inference should use `InfiniDepth`.
+- In this demo, `InfiniDepth_DepthSensor` requires a depth map input; RGB-only inference should use `InfiniDepth`.
 - Supported depth formats in the demo upload: `.png`, `.npy`, `.npz`, `.h5`, `.hdf5`, `.exr`.
 
 
-## 🧪 Inference Instruction
+## 🚀 Inference
 
-Run from repository root:
+### Quick Command Index
 
-```bash
-cd /path/to/InfiniDepth
-```
+| If you want ... | Recommended command |
+| --- | --- |
+| Relative Depth from Single RGB Image | `bash example_scripts/infer_depth/courtyard_infinidepth.sh` |
+| 3D Gaussian from Single RGB Image | `bash example_scripts/infer_gs/courtyard_infinidepth_gs.sh` |
+| Metric Depth from RGB + Depth Sensor | `bash example_scripts/infer_depth/eth3d_infinidepth_depthsensor.sh` |
+| 3D Gaussian from RGB + Depth Sensor | `bash example_scripts/infer_gs/eth3d_infinidepth_depthsensor_gs.sh` |
 
-### 0) Quick Start: Run on One Image Immediately
+<details open>
+<summary><strong> 1. Relative Depth from Single RGB Image</strong> (<code>inference_depth.py</code>)</summary>
 
-After environment setup and checkpoint download, you can run Gaussian inference on a single RGB image right away:
+Use this when you want a relative depth map from a single RGB image and, optionally, a point cloud export.
 
-```bash
-python inference_gs.py \
-  --input_image_path=example_data/image/courtyard.jpg \
-  --model_type=InfiniDepth \
-  --depth_model_path=checkpoints/depth/infinidepth.ckpt \
-  --gs_model_path=checkpoints/gs/infinidepth_gs.ckpt
-```
+**Required input**
 
-To use your own image, just replace `example_data/image/courtyard.jpg` with your file path.
+- `RGB image`
 
-By default this command will:
+**Required checkpoints**
 
-- save the exported gaussian `.ply` to `example_data/pred_gs/`
-- render a novel-view video to `example_data/pred_gs/` at the input image's original resolution
+- `checkpoints/depth/infinidepth.ckpt`
+- `checkpoints/moge-2-vitl-normal/model.pt` recover metric scale for point cloud export
 
-If you want to quickly test depth-only inference first:
+**Optional checkpoint**
+
+- `checkpoints/sky/skyseg.onnx` additional sky filtering
+
+**Recommended command**
 
 ```bash
 python inference_depth.py \
@@ -199,109 +123,200 @@ python inference_depth.py \
   --upsample_ratio=2
 ```
 
-### 1) Depth Inference (`inference_depth.py`)
+Replace `example_data/image/courtyard.jpg` with your own image path.
 
-Use the provided example scripts:
+**For the example above, outputs are written to**
 
-```bash
-bash example_scripts/infer_depth/eth3d_infinidepth_dc.sh   # RGB + Depth mode
-bash example_scripts/infer_depth/eth3d_infinidepth.sh      # RGB mode
-```
+- `example_data/pred_depth/` for the colorized depth map
+- `example_data/pred_pcd/` for the exported point cloud when `--save_pcd=True`
 
-Or run `inference_depth.py` directly:
+**Example scripts**
 
 ```bash
-python inference_depth.py \
-  --input_image_path=... \
-  --model_type=InfiniDepth \
-  --depth_model_path=checkpoints/depth/infinidepth.ckpt \
-  --fx_org (optional) \ 
-  --fy_org (optional) \ 
-  --cx_org (optional) \ 
-  --cy_org (optional) \
-  --output_resolution_mode=... \ (optional)
-  --output_size=... \ (optional)
-  --upsample_ratio=... \ (optional)
-```
-Output resolution is controlled by three arguments:
-
-- `--output_resolution_mode=upsample`: output size = `input_size * upsample_ratio` (with `upsample_ratio >= 1`)
-- `--output_resolution_mode=original`: output size = original input image size
-- `--output_resolution_mode=specific`: output size = `output_size` (explicit `(H,W)`)
-
-Use `--model_type=InfiniDepth_DC` together with `--input_depth_path` for sparse depth completion.
-
-### 2) Gaussian Inference (`inference_gs.py`)
-
-Use the provided example scripts:
-
-```bash
-bash example_scripts/infer_gs/eth3d_infinidepth_gs.sh       # RGB mode
+bash example_scripts/infer_depth/courtyard_infinidepth.sh
+bash example_scripts/infer_depth/camera_infinidepth.sh
+bash example_scripts/infer_depth/eth3d_infinidepth.sh
+bash example_scripts/infer_depth/waymo_infinidepth.sh
 ```
 
-Or run `inference_gs.py` directly:
+**Most useful options**
+
+| Argument | What it controls |
+| --- | --- |
+| `--output_resolution_mode` | Choose `upsample`, `original`, or `specific`. |
+| `--upsample_ratio` | Used when `output_resolution_mode=upsample`. |
+| `--output_size` | Explicit output size `(H,W)` when `output_resolution_mode=specific`. |
+| `--save_pcd` | Export a point cloud alongside the depth map. |
+| `--fx_org --fy_org --cx_org --cy_org` | Camera intrinsics in the original image resolution. |
+
+</details>
+
+<details>
+<summary><strong>2. 3D Gaussian + Novel-View Video from Single RGB Image</strong> (<code>inference_gs.py</code>)</summary>
+
+Use this when you want a 3D Gaussian export from a single RGB image and an optional novel-view video.
+
+**Required input**
+
+- `RGB image`
+
+**Required checkpoints**
+
+- `checkpoints/depth/infinidepth.ckpt`
+- `checkpoints/gs/infinidepth_gs.ckpt`
+- `checkpoints/moge-2-vitl-normal/model.pt` recover metric scale for 3D Gaussian export
+
+**Optional checkpoint**
+
+- `checkpoints/sky/skyseg.onnx` additional sky filtering
+
+**Recommended command**
 
 ```bash
 python inference_gs.py \
-  --input_image_path=... \
+  --input_image_path=example_data/image/courtyard.jpg \
+  --model_type=InfiniDepth \
   --depth_model_path=checkpoints/depth/infinidepth.ckpt \
-  --gs_model_path=checkpoints/gs/infinidepth_gs.ckpt \
-  --fx_org (optional) \ 
-  --fx_org (optional) \ 
-  --fy_org (optional) \ 
-  --cx_org (optional) \ 
-  --cy_org (optional) \ 
+  --gs_model_path=checkpoints/gs/infinidepth_gs.ckpt
 ```
-Use `--model_type=InfiniDepth_DC` together with `--input_depth_path` and the DC checkpoints for sparse depth completion + gaussian export.
-Unless `--render_size=(H,W)` is specified, the exported novel-view video is rendered at the original input image resolution.
+
+Replace `example_data/image/courtyard.jpg` with your own image path.
+
+**For the example above, outputs are written to**
+
+- `example_data/pred_gs/InfiniDepth_courtyard_gaussians.ply`
+- `example_data/pred_gs/InfiniDepth_courtyard_novel_orbit.mp4`
+
+If `--render_size` is omitted, the novel-view video is rendered at the original input image resolution.
+
+**Example scripts**
+
+```bash
+bash example_scripts/infer_gs/courtyard_infinidepth_gs.sh
+bash example_scripts/infer_gs/camera_infinidepth_gs.sh
+bash example_scripts/infer_gs/fruit_infinidepth_gs.sh
+bash example_scripts/infer_gs/eth3d_infinidepth_gs.sh
+```
+
+**Most useful options**
+
+| Argument | What it controls |
+| --- | --- |
+| `--render_novel_video` | Turn novel-view rendering on or off. |
+| `--render_size` | Output video resolution `(H,W)`. |
+| `--novel_trajectory` | Camera motion type: `orbit` or `swing`. |
+| `--sample_point_num` | Number of sampled points used for gaussian construction. |
+| `--enable_skyseg_model` | Enable sky masking before gaussian sampling. |
+| `--sample_sky_mask_dilate_px` | Dilate the sky mask before filtering. |
+
+> The exported `.ply` files can be visualized in 3D viewers such as [SuperSplat](https://superspl.at/).
+
+</details>
+
+<details>
+<summary><strong>3. Depth Sensor Augmentation (Metric Depth and 3D Gaussian from RGB + Depth Sensor)</strong></summary>
+
+Use this mode when you have an RGB image plus metric depth from a depth sensor.
+
+**Required inputs**
+
+- `RGB image`
+- `Sparse depth` in `.png`, `.npy`, `.npz`, `.h5`, `.hdf5`, or `.exr`
+
+**Required checkpoints**
+
+- `checkpoints/depth/infinidepth_depthsensor.ckpt`
+- `checkpoints/moge-2-vitl-normal/model.pt`
+- `checkpoints/gs/infinidepth_depthsensor_gs.ckpt`
+
+**Required flags**
+
+- `--model_type=InfiniDepth_DepthSensor`
+- `--input_depth_path=...`
 
 
-> The exported gs files (.ply) can be visualized in 3D viewers like [SuperSplat](https://superspl.at/).
+**Metric Depth Inference Command**
 
-### Common argument conventions:
+```bash
+python inference_depth.py \
+  --input_image_path=example_data/image/eth3d_office.png \
+  --input_depth_path=example_data/depth/eth3d_office.npz \
+  --model_type=InfiniDepth_DepthSensor \
+  --depth_model_path=checkpoints/depth/infinidepth_depthsensor.ckpt \
+  --fx_org=866.39 \
+  --fy_org=866.04 \
+  --cx_org=791.5 \
+  --cy_org=523.81 \
+  --output_resolution_mode=upsample \
+  --upsample_ratio=1
+```
+
+**3D Gaussian Inference Command**
+
+```bash
+python inference_gs.py \
+  --input_image_path=example_data/image/eth3d_office.png \
+  --input_depth_path=example_data/depth/eth3d_office.npz \
+  --model_type=InfiniDepth_DepthSensor \
+  --depth_model_path=checkpoints/depth/infinidepth_depthsensor.ckpt \
+  --gs_model_path=checkpoints/gs/infinidepth_depthsensor_gs.ckpt \
+  --fx_org=866.39 \
+  --fy_org=866.04 \
+  --cx_org=791.5 \
+  --cy_org=523.81
+```
+
+**Example scripts**
+
+```bash
+bash example_scripts/infer_depth/eth3d_infinidepth_depthsensor.sh
+bash example_scripts/infer_depth/waymo_infinidepth_depthsensor.sh
+bash example_scripts/infer_gs/eth3d_infinidepth_depthsensor_gs.sh
+bash example_scripts/infer_gs/waymo_infinidepth_depthsensor_gs.sh
+```
+
+**Most useful options**
+
+| Argument | What it controls |
+| --- | --- |
+| `--fx_org --fy_org --cx_org --cy_org` | Strongly recommended when you know the sensor intrinsics. |
+| `--output_resolution_mode` | Output behavior for `inference_depth.py`. |
+| `--render_size` | Video resolution for `inference_gs.py`. |
+| `--output_ply_dir` | Custom output directory for gaussian export. |
+
+</details>
+
+<details>
+<summary><strong>4.Common Argument Conventions</strong></summary>
+
 | Argument | Used in | Description |
-|---|---|---|
-| `--input_image_path` | depth + gs | Path to input RGB image (required). |
-| `--input_depth_path` | depth + gs | Optional metric depth input. If missing, MoGe-2 is used to estimate metric depth prompt. |
-| `--model_type` | depth + gs | Depth backbone type: `InfiniDepth` (RGB-only relative depth) or `InfiniDepth_DC` (metric depth with sparse prompt). |
-| `--depth_model_path` | depth + gs | Checkpoint path for depth model. |
-| `--moge2_pretrained` | depth + gs | MoGe-2 checkpoint path used when `--input_depth_path` is not provided. |
-| `--fx_org --fy_org --cx_org --cy_org` | depth + gs | Camera intrinsics in original image resolution. If any is missing, defaults are used (`fx=fy=max(H,W)`, `cx=W/2`, `cy=H/2`). |
-| `--input_size` | depth + gs | Network input size as `(H,W)`. All model inference runs on this resized resolution; it does not control the default GS video render resolution. |
-| `--enable_skyseg_model` | depth + gs | Whether to enable sky segmentation mask before depth / gaussian sampling logic. |
-| `--sky_model_ckpt_path` | depth + gs | Sky segmentation ONNX checkpoint path. |
+| --- | --- | --- |
+| `--input_image_path` | depth + gs | Path to the input RGB image. |
+| `--input_depth_path` | depth + gs | Optional metric depth prompt; required for `InfiniDepth_depthsensor`. |
+| `--model_type` | depth + gs | `InfiniDepth` for RGB-only, `InfiniDepth_depthsensor` for RGB + sparse depth. |
+| `--depth_model_path` | depth + gs | Path to the depth checkpoint. |
+| `--gs_model_path` | gs only | Path to the gaussian predictor checkpoint. |
+| `--moge2_pretrained` | depth + gs | MoGe-2 checkpoint used when `--input_depth_path` is missing. |
+| `--fx_org --fy_org --cx_org --cy_org` | depth + gs | Camera intrinsics in original image resolution. Missing values fall back to MoGe-2 estimates or image-size defaults. |
+| `--input_size` | depth + gs | Network input size `(H,W)` used during inference. |
+| `--enable_skyseg_model` | depth + gs | Enable sky masking before depth or gaussian sampling. |
+| `--sky_model_ckpt_path` | depth + gs | Path to the sky segmentation ONNX checkpoint. |
 
-Depth-only arguments (`inference_depth.py`):
+**Depth output modes**
 
-| Argument | Description |
-|---|---|
-| `--depth_output_dir` | Output directory for colorized depth images. |
-| `--pcd_output_dir` | Output directory for exported point cloud (`.ply`). |
-| `--save_pcd` | Whether to export point cloud. |
-| `--output_resolution_mode` | Depth output mode: `upsample`, `original`, or `specific`. |
-| `--upsample_ratio` | Used when `output_resolution_mode=upsample`; output size = `input_size * upsample_ratio`. |
-| `--output_size` | Used when `output_resolution_mode=specific`; explicit output `(H,W)`. |
+- `--output_resolution_mode=upsample`: output size = `input_size * upsample_ratio`
+- `--output_resolution_mode=original`: output size = original input image size
+- `--output_resolution_mode=specific`: output size = `output_size`
 
-Gaussian-only arguments (`inference_gs.py`):
+**Default output directories**
 
-| Argument | Description |
-|---|---|
-| `--gs_model_path` | Checkpoint path for gaussian prediction model (InfiniDepth_GS). |
-| `--sample_point_num` | Number of sampled points for sparse 3D gaussian construction. Larger values improve density but increase memory/time. |
-| `--coord_deterministic_sampling` | Use deterministic coordinate sampling for reproducibility. |
-| `--sample_sky_mask_dilate_px` | Dilation radius (pixels) for sky mask before GS sampling. |
-| `--output_ply_dir` | Output directory for gaussian `.ply`. |
-| `--output_ply_name` | Output filename for gaussian `.ply`. |
-| `--render_novel_video` | Whether to render a novel-view video from exported gaussians. |
-| `--novel_video_path` | Optional output path for novel-view video. |
-| `--novel_trajectory` | Camera path type: `orbit` or `swing`. |
-| `--novel_num_frames` | Number of frames in novel-view video. |
-| `--novel_video_fps` | FPS of novel-view video. |
-| `--novel_radius` | Camera translation amplitude for novel-view motion. |
-| `--novel_vertical` | Vertical motion amplitude (mainly for `orbit`). |
-| `--novel_forward` | Forward/backward motion amplitude. |
-| `--render_size` | Novel-view render size `(H,W)`. If omitted / `None`, defaults to the original input image size and only affects the exported video resolution when explicitly provided. |
-| `--novel_bg_color` | Background color as `(R,G,B)` in `[0,1]`. |
+| Script | Default directory |
+| --- | --- |
+| `inference_depth.py` depth images | `pred_depth/` next to your input data folder |
+| `inference_depth.py` point clouds | `pred_pcd/` next to your input data folder |
+| `inference_gs.py` gaussians and videos | `pred_gs/` next to your input data folder |
+
+</details>
 
 ## 🙏 Acknowledgments
 
