@@ -346,7 +346,7 @@ def _select_example(evt: gr.SelectData):
 
 
 def _primary_view_for_task(task_type: str):
-    selected_tab = GS_VIEW_TAB_ID if task_type == "GS" else DEPTH_VIEW_TAB_ID
+    selected_tab = GS_VIEW_TAB_ID if task_type == "3DGS" else DEPTH_VIEW_TAB_ID
     return gr.update(selected=selected_tab)
 
 
@@ -691,7 +691,7 @@ def _run_inference(
     cy_org: Optional[float],
     request: gr.Request,
 ):
-    if task_type == "GS":
+    if task_type == "3DGS":
         return _run_gs_inference(
             image=image,
             depth_file=depth_file,
