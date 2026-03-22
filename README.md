@@ -16,8 +16,9 @@
   <a href="https://huggingface.co/spaces/ritianyu/InfiniDepth">
     <img src="https://img.shields.io/badge/Hugging%20Face-Demo-blue.svg?style=for-the-badge" alt="Hugging Face Demo">
   </a>
-  
-</p>
+  <a href="https://huggingface.co/datasets/ritianyu/game_4k_data">
+    <img src="https://img.shields.io/badge/Hugging%20Face-Dataset-blue.svg?style=for-the-badge" alt="Synth4K Dataset">
+  </a>
 
 <p align="center">
   <a href="https://ritianyu.github.io/">Hao Yu*</a> •
@@ -45,6 +46,15 @@
 
 > **[2026-02]** 🎉 InfiniDepth has been accepted to CVPR 2026! Code coming soon!
 
+Join our **[Wechat](#)** group to discuss and find help from us.
+<p align="center">
+  <img src="assets/wechat.jpg" alt="WeChat QR Code" width="220"/>
+</p>
+
+<p align="center">
+  Scan the QR code to join our WeChat group.
+</p>
+
 
 ## ✨ What can InfiniDepth do?
 InfiniDepth supports three practical capabilities for single-image 3D perception and reconstruction:
@@ -58,7 +68,7 @@ InfiniDepth supports three practical capabilities for single-image 3D perception
 ## ⚙️ Installation
 
 Please see [INSTALL.md](INSTALL.md) for manual installation.
-
+ 
 ## 🤗 Hugging Face Space Demo
 
 If you want to test InfiniDepth before running local CLI inference, start with the hosted demo:
