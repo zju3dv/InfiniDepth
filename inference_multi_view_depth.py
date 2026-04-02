@@ -28,12 +28,15 @@ from InfiniDepth.utils.io_utils import merge_point_clouds, save_point_cloud
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _DEPTH_EXTENSIONS = {".png", ".npy", ".npz", ".h5", ".hdf5", ".exr"}
 _VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}
+_CAMERA_PARAM_EXTENSIONS = {".txt"}
 
 
 @dataclass
 class SequenceDepthInferenceArgs:
     input_path: str
     input_depth_path: Optional[str] = None
+    camera_intrinsics_dir: Optional[str] = None
+    camera_extrinsics_dir: Optional[str] = None
     input_mode: Literal["auto", "images", "video"] = "auto"
     output_root: Optional[str] = None
     save_frame_pcd: bool = True
@@ -87,6 +90,27 @@ def _collect_paths_from_input(input_path: Path, allowed_extensions: set[str], la
     if not frame_paths:
         raise ValueError(f"No {label} files found under: {input_path}")
     return frame_paths
+
+
+def _collect_camera_parameter_paths(camera_dir: str, expected_count: int, label: str) -> list[str]:
+    directory = Path(camera_dir).expanduser().resolve()
+    if not directory.exists():
+        raise FileNotFoundError(f"{label} directory not found: {directory}")
+    if not directory.is_dir():
+        raise ValueError(f"{label} path must be a directory: {directory}")
+
+    file_paths = sorted(
+        str(path.resolve())
+        for path in directory.iterdir()
+        if path.is_file() and path.suffix.lower() in _CAMERA_PARAM_EXTENSIONS
+    )
+    if not file_paths:
+        raise ValueError(f"No {label} files found under: {directory}")
+    if len(file_paths) != expected_count:
+        raise RuntimeError(
+            f"{label} count {len(file_paths)} does not match RGB frame count {expected_count}."
+        )
+    return file_paths
 
 
 def _extract_video_frames(
@@ -283,6 +307,80 @@ def _run_da3_inference(model, frame_paths: list[str], args: SequenceDepthInferen
     }
 
 
+def _load_intrinsics_matrix_txt(path: str) -> np.ndarray:
+    raw = np.asarray(np.loadtxt(path, dtype=np.float32), dtype=np.float32)
+    if raw.shape == (3, 3):
+        intrinsics = raw
+    else:
+        values = raw.reshape(-1)
+        if values.size < 4:
+            raise ValueError(
+                f"Expected at least 4 values in intrinsics file `{path}`, got {values.size}."
+            )
+        intrinsics = np.array(
+            [
+                [float(values[0]), 0.0, float(values[2])],
+                [0.0, float(values[1]), float(values[3])],
+                [0.0, 0.0, 1.0],
+            ],
+            dtype=np.float32,
+        )
+
+    if intrinsics.shape != (3, 3):
+        raise ValueError(f"Intrinsics file `{path}` must resolve to a 3x3 matrix, got {intrinsics.shape}.")
+    if not np.all(np.isfinite(intrinsics)):
+        raise ValueError(f"Intrinsics file `{path}` contains non-finite values.")
+    return intrinsics.astype(np.float32)
+
+
+def _load_extrinsics_matrix_txt(path: str) -> np.ndarray:
+    raw = np.asarray(np.loadtxt(path, dtype=np.float32), dtype=np.float32)
+    if raw.shape in {(3, 4), (4, 4)}:
+        matrix = raw
+    else:
+        values = raw.reshape(-1)
+        if values.size == 12:
+            matrix = values.reshape(3, 4)
+        elif values.size == 16:
+            matrix = values.reshape(4, 4)
+        else:
+            raise ValueError(
+                f"Extrinsics file `{path}` must contain a 3x4 or 4x4 matrix, got {values.size} values."
+            )
+
+    matrix = ensure_homogeneous_extrinsics(matrix)[0]
+    if matrix.shape != (4, 4):
+        raise ValueError(f"Extrinsics file `{path}` must resolve to a 4x4 matrix, got {matrix.shape}.")
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError(f"Extrinsics file `{path}` contains non-finite values.")
+    return matrix.astype(np.float32)
+
+
+def _load_user_camera_parameters(
+    frame_paths: list[str],
+    args: SequenceDepthInferenceArgs,
+) -> dict[str, list[str] | np.ndarray]:
+    intrinsics_paths = _collect_camera_parameter_paths(
+        args.camera_intrinsics_dir,
+        expected_count=len(frame_paths),
+        label="Camera intrinsics",
+    )
+    extrinsics_paths = _collect_camera_parameter_paths(
+        args.camera_extrinsics_dir,
+        expected_count=len(frame_paths),
+        label="Camera extrinsics",
+    )
+
+    intrinsics = np.stack([_load_intrinsics_matrix_txt(path) for path in intrinsics_paths], axis=0)
+    extrinsics_w2c = np.stack([_load_extrinsics_matrix_txt(path) for path in extrinsics_paths], axis=0)
+    return {
+        "intrinsics_original": intrinsics.astype(np.float32),
+        "extrinsics_w2c": extrinsics_w2c.astype(np.float32),
+        "intrinsics_paths": intrinsics_paths,
+        "extrinsics_paths": extrinsics_paths,
+    }
+
+
 def _build_frame_args(args: SequenceDepthInferenceArgs) -> DepthInferenceArgs:
     return DepthInferenceArgs(
         input_image_path=args.input_path,
@@ -317,15 +415,15 @@ def _resolve_da3_intrinsics_original(
     )
 
 
-def _build_da3_output_intrinsics(
-    da3_intrinsics_org: np.ndarray,
+def _build_output_intrinsics_from_original(
+    intrinsics_org: np.ndarray,
     org_h: int,
     org_w: int,
     output_h: int,
     output_w: int,
 ) -> np.ndarray:
     return scale_intrinsics_matrix_np(
-        da3_intrinsics_org,
+        intrinsics_org,
         src_h=org_h,
         src_w=org_w,
         dst_h=output_h,
@@ -357,6 +455,10 @@ def _write_json(path: str, payload: dict) -> None:
     Path(path).write_text(json.dumps(payload, indent=2, ensure_ascii=True))
 
 
+def _use_user_camera_parameters(args: SequenceDepthInferenceArgs) -> bool:
+    return args.camera_intrinsics_dir is not None and args.camera_extrinsics_dir is not None
+
+
 def _validate_args(args: SequenceDepthInferenceArgs, input_path: Path) -> None:
     if not input_path.exists():
         raise FileNotFoundError(f"Input path not found: {input_path}")
@@ -367,6 +469,13 @@ def _validate_args(args: SequenceDepthInferenceArgs, input_path: Path) -> None:
             "`InfiniDepth_DepthSensor` requires `--input_depth_path` for sequence inference."
         )
 
+    has_camera_intrinsics = args.camera_intrinsics_dir is not None
+    has_camera_extrinsics = args.camera_extrinsics_dir is not None
+    if has_camera_intrinsics != has_camera_extrinsics:
+        raise ValueError(
+            "Provide both `--camera_intrinsics_dir` and `--camera_extrinsics_dir`, or leave both unset."
+        )
+
 
 @torch.no_grad()
 def main(args: SequenceDepthInferenceArgs) -> None:
@@ -374,6 +483,10 @@ def main(args: SequenceDepthInferenceArgs) -> None:
     _validate_args(args, input_path)
 
     input_mode = _detect_input_mode(input_path, args.input_mode)
+    use_user_camera_parameters = _use_user_camera_parameters(args)
+    if use_user_camera_parameters and input_mode == "video":
+        raise ValueError("Explicit camera parameter mode only supports image inputs; video input is not supported.")
+
     output_paths = resolve_sequence_output_paths(str(input_path), args.output_root)
 
     frame_paths, source_fps, source_type = _prepare_rgb_inputs(input_path, input_mode, output_paths)
@@ -385,46 +498,63 @@ def main(args: SequenceDepthInferenceArgs) -> None:
         expected_count=len(frame_paths),
     )
 
-    DepthAnything3 = _import_depth_anything3()
-    da3_model = DepthAnything3.from_pretrained(args.da3_model).to("cuda")
-    if hasattr(da3_model, "eval"):
-        da3_model.eval()
-    print(f"Loaded DA3 model: {args.da3_model}")
+    camera_source = "user" if use_user_camera_parameters else "da3"
+    user_camera_outputs = None
+    da3_outputs = None
+    if use_user_camera_parameters:
+        user_camera_outputs = _load_user_camera_parameters(frame_paths, args)
+        print(
+            "Using explicit camera parameters from "
+            f"{Path(args.camera_intrinsics_dir).expanduser().resolve()} and "
+            f"{Path(args.camera_extrinsics_dir).expanduser().resolve()}. Skip DA3."
+        )
+    else:
+        DepthAnything3 = _import_depth_anything3()
+        da3_model = DepthAnything3.from_pretrained(args.da3_model).to("cuda")
+        if hasattr(da3_model, "eval"):
+            da3_model.eval()
+        print(f"Loaded DA3 model: {args.da3_model}")
 
-    da3_outputs = _run_da3_inference(da3_model, frame_paths, args, source_type)
-    cache_payload = {
-        "depth": da3_outputs["depth"],
-        "intrinsics": da3_outputs["intrinsics"],
-        "extrinsics_w2c": da3_outputs["extrinsics_w2c"],
-    }
-    if da3_outputs["conf"] is not None:
-        cache_payload["conf"] = da3_outputs["conf"]
-    np.savez_compressed(output_paths.da3_cache_path, **cache_payload)
-    print(f"Saved DA3 cache -> {output_paths.da3_cache_path}")
+        da3_outputs = _run_da3_inference(da3_model, frame_paths, args, source_type)
+        cache_payload = {
+            "depth": da3_outputs["depth"],
+            "intrinsics": da3_outputs["intrinsics"],
+            "extrinsics_w2c": da3_outputs["extrinsics_w2c"],
+        }
+        if da3_outputs["conf"] is not None:
+            cache_payload["conf"] = da3_outputs["conf"]
+        np.savez_compressed(output_paths.da3_cache_path, **cache_payload)
+        print(f"Saved DA3 cache -> {output_paths.da3_cache_path}")
 
     frame_args = _build_frame_args(args)
     depth_model, device = load_depth_model(frame_args)
 
     merged_frame_pcds = []
     frame_meta_paths: list[str] = []
-    da3_ransac_reference_enabled = _should_use_da3_ransac_reference(args.model_type)
-    da3_post_scale_align_enabled = _should_apply_da3_post_scale_align(args)
+    da3_ransac_reference_enabled = (not use_user_camera_parameters) and _should_use_da3_ransac_reference(args.model_type)
+    da3_post_scale_align_enabled = (not use_user_camera_parameters) and _should_apply_da3_post_scale_align(args)
 
     for frame_index, frame_path in enumerate(frame_paths):
         print(f"Processing frame {frame_index + 1}/{len(frame_paths)}: {frame_path}")
         org_h, org_w = _read_image_size(frame_path)
-        da3_intrinsics_org = _resolve_da3_intrinsics_original(
-            da3_outputs,
-            frame_index,
-            org_h,
-            org_w,
-        )
-        frame_w2c = da3_outputs["extrinsics_w2c"][frame_index]
-        frame_conf = None if da3_outputs["conf"] is None else da3_outputs["conf"][frame_index]
         frame_depth_path = None if depth_frame_paths is None else depth_frame_paths[frame_index]
-
+        frame_conf = None
         override_gt_depth = None
         override_gt_depth_mask = None
+
+        if use_user_camera_parameters:
+            frame_intrinsics_org = user_camera_outputs["intrinsics_original"][frame_index]
+            frame_w2c = user_camera_outputs["extrinsics_w2c"][frame_index]
+        else:
+            frame_intrinsics_org = _resolve_da3_intrinsics_original(
+                da3_outputs,
+                frame_index,
+                org_h,
+                org_w,
+            )
+            frame_w2c = da3_outputs["extrinsics_w2c"][frame_index]
+            frame_conf = None if da3_outputs["conf"] is None else da3_outputs["conf"][frame_index]
+
         if da3_ransac_reference_enabled:
             override_gt_depth, override_gt_depth_mask = _build_da3_ransac_override(
                 da3_outputs["depth"][frame_index],
@@ -437,15 +567,15 @@ def main(args: SequenceDepthInferenceArgs) -> None:
             device=device,
             input_image_path=frame_path,
             input_depth_path=frame_depth_path,
-            fx_org=float(da3_intrinsics_org[0, 0]),
-            fy_org=float(da3_intrinsics_org[1, 1]),
-            cx_org=float(da3_intrinsics_org[0, 2]),
-            cy_org=float(da3_intrinsics_org[1, 2]),
+            fx_org=float(frame_intrinsics_org[0, 0]),
+            fy_org=float(frame_intrinsics_org[1, 1]),
+            cx_org=float(frame_intrinsics_org[0, 2]),
+            cy_org=float(frame_intrinsics_org[1, 2]),
             override_gt_depth=override_gt_depth,
             override_gt_depth_mask=override_gt_depth_mask,
         )
-        da3_intrinsics_output = _build_da3_output_intrinsics(
-            da3_intrinsics_org,
+        frame_intrinsics_output = _build_output_intrinsics_from_original(
+            frame_intrinsics_org,
             org_h=org_h,
             org_w=org_w,
             output_h=result.output_h,
@@ -478,7 +608,7 @@ def main(args: SequenceDepthInferenceArgs) -> None:
             pcd_path=pcd_path if args.save_frame_pcd else None,
             save_pcd=args.save_frame_pcd,
             pcd_extrinsics_w2c=frame_w2c,
-            pcd_intrinsics_override=da3_intrinsics_output,
+            pcd_intrinsics_override=frame_intrinsics_output,
         )
 
         if args.save_merged_pcd:
@@ -486,17 +616,11 @@ def main(args: SequenceDepthInferenceArgs) -> None:
                 frame_pcd = build_point_cloud_from_depth_result(
                     result,
                     pcd_extrinsics_w2c=frame_w2c,
-                    pcd_intrinsics_override=da3_intrinsics_output,
+                    pcd_intrinsics_override=frame_intrinsics_output,
                 )
             merged_frame_pcds.append(frame_pcd)
 
         frame_c2w = np.linalg.inv(frame_w2c)
-        da3_post_scale_align_applied = (
-            da3_post_scale_align_enabled
-            and result.depth_scale_align_valid_pixels >= int(args.da3_scale_align_min_valid_pixels)
-            and np.isfinite(result.depth_scale_align_factor)
-            and result.depth_scale_align_factor > 0.0
-        )
         frame_meta = {
             "frame_id": frame_index,
             "frame_name": frame_name,
@@ -507,26 +631,43 @@ def main(args: SequenceDepthInferenceArgs) -> None:
             "input_resolution": [result.org_h, result.org_w],
             "inference_resolution": [result.input_h, result.input_w],
             "output_resolution": [result.output_h, result.output_w],
-            "da3_process_resolution": [int(da3_outputs["processed_h"]), int(da3_outputs["processed_w"])],
-            "da3_intrinsics_original": da3_intrinsics_org.tolist(),
-            "da3_intrinsics_output": da3_intrinsics_output.tolist(),
-            "pcd_intrinsics_source": "da3",
+            "camera_source": camera_source,
+            "camera_intrinsics_original": frame_intrinsics_org.tolist(),
+            "camera_intrinsics_output": frame_intrinsics_output.tolist(),
+            "pcd_intrinsics_source": camera_source,
             "model_intrinsics_source": result.intrinsics_source,
             "model_intrinsics_output": result.output_intrinsics_matrix().tolist(),
             "extrinsics_w2c": frame_w2c.tolist(),
             "extrinsics_c2w": frame_c2w.tolist(),
-            "da3_conf_mean": None if frame_conf is None else float(np.mean(frame_conf)),
-            "da3_ransac_reference_enabled": da3_ransac_reference_enabled,
-            "da3_post_scale_align_enabled": da3_post_scale_align_enabled,
-            "da3_post_scale_align_applied": da3_post_scale_align_applied,
-            "da3_post_scale_align_factor": result.depth_scale_align_factor if da3_post_scale_align_enabled else 1.0,
-            "da3_post_scale_align_valid_pixels": result.depth_scale_align_valid_pixels if da3_post_scale_align_enabled else 0,
-            "da3_scale_align_factor": result.depth_scale_align_factor if da3_post_scale_align_enabled else 1.0,
-            "da3_scale_align_valid_pixels": result.depth_scale_align_valid_pixels if da3_post_scale_align_enabled else 0,
             "frame_pcd_path": pcd_path if args.save_frame_pcd else None,
             "depth_raw_path": depth_raw_path,
             "depth_vis_path": depth_vis_path,
         }
+        if use_user_camera_parameters:
+            frame_meta["camera_intrinsics_path"] = user_camera_outputs["intrinsics_paths"][frame_index]
+            frame_meta["camera_extrinsics_path"] = user_camera_outputs["extrinsics_paths"][frame_index]
+        else:
+            da3_post_scale_align_applied = (
+                da3_post_scale_align_enabled
+                and result.depth_scale_align_valid_pixels >= int(args.da3_scale_align_min_valid_pixels)
+                and np.isfinite(result.depth_scale_align_factor)
+                and result.depth_scale_align_factor > 0.0
+            )
+            frame_meta.update(
+                {
+                    "da3_process_resolution": [int(da3_outputs["processed_h"]), int(da3_outputs["processed_w"])],
+                    "da3_intrinsics_original": frame_intrinsics_org.tolist(),
+                    "da3_intrinsics_output": frame_intrinsics_output.tolist(),
+                    "da3_conf_mean": None if frame_conf is None else float(np.mean(frame_conf)),
+                    "da3_ransac_reference_enabled": da3_ransac_reference_enabled,
+                    "da3_post_scale_align_enabled": da3_post_scale_align_enabled,
+                    "da3_post_scale_align_applied": da3_post_scale_align_applied,
+                    "da3_post_scale_align_factor": result.depth_scale_align_factor if da3_post_scale_align_enabled else 1.0,
+                    "da3_post_scale_align_valid_pixels": result.depth_scale_align_valid_pixels if da3_post_scale_align_enabled else 0,
+                    "da3_scale_align_factor": result.depth_scale_align_factor if da3_post_scale_align_enabled else 1.0,
+                    "da3_scale_align_valid_pixels": result.depth_scale_align_valid_pixels if da3_post_scale_align_enabled else 0,
+                }
+            )
         _write_json(meta_path, frame_meta)
         frame_meta_paths.append(meta_path)
 
@@ -555,25 +696,50 @@ def main(args: SequenceDepthInferenceArgs) -> None:
         "video_fps": source_fps,
         "depth_video_fps": depth_source_fps if use_input_depth else None,
         "output_root": output_paths.root_dir,
+        "camera_source": camera_source,
         "model_type": args.model_type,
-        "da3_model": args.da3_model,
-        "da3_process_res": args.da3_process_res,
-        "da3_process_res_method": args.da3_process_res_method,
-        "da3_ref_view_strategy": da3_outputs["ref_view_strategy"],
-        "align_to_da3_depth": args.align_to_da3_depth,
-        "da3_depth_ransac_conditioning_enabled": da3_ransac_reference_enabled,
-        "da3_post_scale_align_enabled": da3_post_scale_align_enabled,
-        "da3_scale_align_conf_threshold": args.da3_scale_align_conf_threshold,
-        "da3_scale_align_min_valid_pixels": args.da3_scale_align_min_valid_pixels,
         "frame_depth_dir": output_paths.frame_depth_dir,
         "frame_depth_vis_dir": output_paths.frame_depth_vis_dir,
         "frame_pcd_dir": output_paths.frame_pcd_dir if args.save_frame_pcd else None,
         "frame_meta_dir": output_paths.frame_meta_dir,
-        "da3_cache_path": output_paths.da3_cache_path,
         "merged_pcd_path": merged_pcd_path,
         "merged_point_count": merged_point_count,
         "frame_meta_paths": frame_meta_paths,
     }
+    if use_user_camera_parameters:
+        manifest.update(
+            {
+                "camera_intrinsics_dir": str(Path(args.camera_intrinsics_dir).expanduser().resolve()),
+                "camera_extrinsics_dir": str(Path(args.camera_extrinsics_dir).expanduser().resolve()),
+                "align_to_da3_depth": False,
+                "da3_model": None,
+                "da3_process_res": None,
+                "da3_process_res_method": None,
+                "da3_ref_view_strategy": None,
+                "da3_depth_ransac_conditioning_enabled": False,
+                "da3_post_scale_align_enabled": False,
+                "da3_scale_align_conf_threshold": None,
+                "da3_scale_align_min_valid_pixels": None,
+                "da3_cache_path": None,
+            }
+        )
+    else:
+        manifest.update(
+            {
+                "camera_intrinsics_dir": None,
+                "camera_extrinsics_dir": None,
+                "da3_model": args.da3_model,
+                "da3_process_res": args.da3_process_res,
+                "da3_process_res_method": args.da3_process_res_method,
+                "da3_ref_view_strategy": da3_outputs["ref_view_strategy"],
+                "align_to_da3_depth": args.align_to_da3_depth,
+                "da3_depth_ransac_conditioning_enabled": da3_ransac_reference_enabled,
+                "da3_post_scale_align_enabled": da3_post_scale_align_enabled,
+                "da3_scale_align_conf_threshold": args.da3_scale_align_conf_threshold,
+                "da3_scale_align_min_valid_pixels": args.da3_scale_align_min_valid_pixels,
+                "da3_cache_path": output_paths.da3_cache_path,
+            }
+        )
     _write_json(output_paths.manifest_path, manifest)
     print(f"Saved manifest -> {output_paths.manifest_path}")
 

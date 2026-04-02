@@ -291,7 +291,7 @@ bash example_scripts/infer_gs/waymo_infinidepth_depthsensor_gs.sh
 <details>
 <summary><strong>4. Multi-View / Video Depth + Global Point Cloud</strong> (<code>inference_multi_view_depth.py</code>)</summary>
 
-Use this when you want sequence-level depth inference from an RGB image folder or video, plus per-frame aligned point clouds and one merged global point cloud. The script runs DA3 once on the whole sequence, then aligns each InfiniDepth depth map to the corresponding DA3 depth map before export.
+Use this when you want sequence-level depth inference from an RGB image folder or video, plus per-frame aligned point clouds and one merged global point cloud. By default the script runs DA3 once on the whole sequence, then aligns each InfiniDepth depth map to the corresponding DA3 depth map before export. When you already know the camera intrinsics and extrinsics, you can instead provide them directly and skip DA3 entirely.
 
 **Required inputs**
 
@@ -303,7 +303,7 @@ Use this when you want sequence-level depth inference from an RGB image folder o
 - `checkpoints/depth/infinidepth.ckpt` for RGB-only inference
 - `checkpoints/depth/infinidepth_depthsensor.ckpt` for RGB + depth sensor inference
 - `checkpoints/moge-2-vitl-normal/model.pt` recover metric scale for RGB-only frame inference
-- `depth-anything-3` installed in the current environment; default DA3 model is `depth-anything/DA3-LARGE-1.1`
+- `depth-anything-3` installed in the current environment when using the default DA3-based sequence mode; default DA3 model is `depth-anything/DA3-LARGE-1.1`
 
 **Optional checkpoint**
 
@@ -330,6 +330,19 @@ python inference_multi_view_depth.py \
 
 For video input, replace `--input_path` with a video file. When `--model_type=InfiniDepth_DepthSensor`, `--input_depth_path` can also be a depth video and must contain the same number of frames as the RGB input.
 
+**Explicit Camera-Parameter Multi-View Command**
+
+```bash
+python inference_multi_view_depth.py \
+  --input_path=example_data/multi-view/waymo/image \
+  --camera_intrinsics_dir=/path/to/intrinsics \
+  --camera_extrinsics_dir=/path/to/extrinsics \
+  --model_type=InfiniDepth \
+  --depth_model_path=checkpoints/depth/infinidepth.ckpt \
+```
+
+The explicit camera mode expects Waymo-style text files under `intrinsics/` and `extrinsics/`. Files are sorted lexicographically and matched one-to-one against the sorted RGB image list, so the number of camera files must exactly match the number of images. In this mode the script skips DA3 loading, DA3 cache export, DA3 RANSAC conditioning, and DA3 post scale alignment. This mode currently supports image inputs only, not video.
+
 **For the RGB-only example above, outputs are written to**
 
 - `example_data/multi-view/waymo/pred_sequence/image/frames/depth/` for aligned raw depth maps
@@ -344,6 +357,7 @@ For video input, replace `--input_path` with a video file. When `--model_type=In
 ```bash
 bash example_scripts/infer_depth/waymo_multi_view_infinidepth.sh
 bash example_scripts/infer_depth/waymo_multi_view_infinidepth_depthsensor.sh
+bash example_scripts/infer_depth/waymo_multi_view_infinidepth_explicit_camera.sh
 ```
 
 **Most useful options**
@@ -352,8 +366,9 @@ bash example_scripts/infer_depth/waymo_multi_view_infinidepth_depthsensor.sh
 | --- | --- |
 | `--input_path` | RGB image directory, single image, or video path. |
 | `--input_depth_path` | Depth directory, single depth file, or depth video; required for `InfiniDepth_DepthSensor`. |
+| `--camera_intrinsics_dir --camera_extrinsics_dir` | Enable explicit camera mode from sorted Waymo-style txt directories. Image inputs only; file counts must match the RGB frame count. |
 | `--input_mode` | Force `images` or `video` instead of auto detection. |
-| `--align_to_da3_depth` | Align each InfiniDepth depth map to the corresponding DA3 depth map before export. |
+| `--align_to_da3_depth` | Align each InfiniDepth depth map to the corresponding DA3 depth map before export. Ignored in explicit camera mode. |
 | `--save_frame_pcd` | Save one aligned point cloud per frame. |
 | `--save_merged_pcd` | Save the merged global point cloud across the whole sequence. |
 | `--da3_scale_align_conf_threshold` | Minimum DA3 confidence used during per-frame scale estimation. |
@@ -369,6 +384,7 @@ bash example_scripts/infer_depth/waymo_multi_view_infinidepth_depthsensor.sh
 | `--input_image_path` | depth + gs | Path to the input RGB image. |
 | `--input_path` | multi-view | Path to an RGB image directory, single image, or video. |
 | `--input_depth_path` | depth + gs + multi-view | Optional metric depth prompt; required for `InfiniDepth_DepthSensor`. In multi-view mode this can be a depth directory, single depth file, or depth video. |
+| `--camera_intrinsics_dir --camera_extrinsics_dir` | multi-view | Optional sequence camera parameter directories. When both are set, multi-view inference skips DA3 and uses the provided sorted txt files directly. |
 | `--model_type` | depth + gs + multi-view | `InfiniDepth` for RGB-only, `InfiniDepth_DepthSensor` for RGB + sparse depth. |
 | `--depth_model_path` | depth + gs | Path to the depth checkpoint. |
 | `--gs_model_path` | gs only | Path to the gaussian predictor checkpoint. |
