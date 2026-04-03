@@ -1,0 +1,8 @@
+__object__:
+  path: common.evaluation.metrics
+  name: FVD
+  args: as_params
+
+extractor_path: ???
+resolution: ???
+target_info_path: ???

@@ -1,0 +1,9 @@
+__object__:
+  path: common.evaluation.metrics
+  name: FID
+  args: as_params
+
+extractor_path: ???
+resolution: ???
+target_info_path: ???
+normalize: ???

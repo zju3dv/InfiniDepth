@@ -10,7 +10,7 @@ try:
 
     XFORMERS_AVAILABLE = True
 except ImportError:
-    Log.warning("xFormers not available")
+    Log.warn("xFormers not available")
     XFORMERS_AVAILABLE = False
 
 

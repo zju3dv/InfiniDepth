@@ -13,11 +13,13 @@ tyro
 
 # Data processing and scientific computing
 numpy<2.0
+pandas
 einops>=0.4.1
 h5py
 omegaconf
 dacite
 hydra-core
+scikit-learn
 
 # Computer vision and graphics
 opencv-python

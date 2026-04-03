@@ -1,0 +1,42 @@
+__include__:
+  - training/exp_configs/default.yaml
+  - training/exp_configs/components/model/infinidepth/infinidepth_depthsensor.yaml
+
+task: infinidepth_depthsensor
+
+model:
+  lr_table:
+    _target_: training.utils.lr_table.LRTable
+    default_lr: 0.00005
+    else_table:
+      pretrained: 0.00001
+
+  scheduler_cfg:
+    scheduler: 
+      _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+      T_max: ${multiply:${pl_trainer.limit_train_batches},${pl_trainer.max_epochs}}
+      eta_min: 0.0000005
+    interval: step
+
+# PyTorch Lightning Configuration
+pl_trainer:
+  max_epochs: 150
+  precision: 16-mixed
+  limit_train_batches: 10000
+
+# PyTorch Lightning Callbacks
+callbacks:
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: ${output_dir}/checkpoints/
+    filename: "e{epoch:03d}-s{step:06d}"
+    save_top_k: -1
+    auto_insert_metric_name: False  
+    save_weights_only: False 
+    every_n_epochs: 2
+    save_last: True
+  lr_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+  
+

@@ -205,3 +205,4 @@ pred_depth
 pred_normal
 pred_pcd
 checkpoints
+common_space

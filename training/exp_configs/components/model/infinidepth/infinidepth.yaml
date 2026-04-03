@@ -1,0 +1,42 @@
+__include__:
+  - training/exp_configs/components/model/depth_estimation.yaml
+model:
+  pipeline:
+    _target_: training.model.depth_estimation.infinidepth.model.InfiniDepth
+    config:
+      backbone: dinov3
+      encoder: vitl16
+      patch_size: 16
+      use_prompt: False
+      warp_type: minmax
+      use_batch_infer: True
+      geometry_type: disparity
+      dino_checkpoint: ${oc.env:commonspace}/pretrained_models/dinov3/dinov3_${model.pipeline.config.encoder}_pretrain_lvd1689m.pth
+      head:
+        output_act: elu
+      prompt:
+        _target_: InfiniDepth.model.block.prompt_models.GeneralPromptModel
+        prompt_stage: [3] # default value is -1, which means prompt all stages
+        block:
+          _target_: InfiniDepth.model.block.prompt_models.selfattn.SelfAttnPromptModel
+          num_blocks: 4
+          pe: "qk"
+      warp_func:
+        _target_: training.model.depth_estimation.utils.depth_warp.WarpMedian
+      loss_cfg:
+        _target_: training.model.depth_estimation.utils.loss.MAELoss
+        gradient_weight: 1.
+        align_pred: False
+        normalize: prewarp
+  lr_table:
+    _target_: training.utils.lr_table.LRTable
+    default_lr: 0.00005
+    else_table:
+      pretrained: 0.000005
+
+  scheduler_cfg:
+    scheduler: 
+      _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+      T_max: ${multiply:${pl_trainer.limit_train_batches},${pl_trainer.max_epochs}}
+      eta_min: 0.0000005
+    interval: step

@@ -6,7 +6,11 @@ import math
 import torch
 import numpy as np
 from torch.optim import SGD, Adam
-from tensorboardX import SummaryWriter
+
+try:
+    from tensorboardX import SummaryWriter
+except ImportError:
+    SummaryWriter = None
 
 
 class Averager():
@@ -73,6 +77,8 @@ def ensure_path(path, remove=True):
 def set_save_path(save_path, remove=True):
     ensure_path(save_path, remove=remove)
     set_log_path(save_path)
+    if SummaryWriter is None:
+        raise ImportError("tensorboardX is required to create a SummaryWriter")
     writer = SummaryWriter(os.path.join(save_path, 'tensorboard'))
     return log, writer
 

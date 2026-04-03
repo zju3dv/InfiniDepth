@@ -1,0 +1,26 @@
+model:
+  _target_: training.model.depth_estimation.depth_estimation_model.DepthEstimationModel
+  output_dir: ${output_dir}/results
+  output_tag: default
+  vis_geometry_type: depth  # [depth, disparity]
+  save_orig_pred: False
+  save_vis_depth: True
+  clear_output_dir: False
+  save_and_concat_diff_map: False
+  save_vis_depth_and_concat_img: True
+  save_vis_depth_and_concat_gt: True
+  save_vis_depth_and_concat_lowres: True
+  log_scale: False
+  near_depth: -1
+  far_depth: -1
+  ransac_align_depth: True
+  compute_abs_metric: True
+  compute_rel_metric: True
+  use_high_freq_mask: False
+  concat_axis: 1
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 0.00005
+    weight_decay: 0.01

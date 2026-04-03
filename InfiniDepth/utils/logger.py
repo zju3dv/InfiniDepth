@@ -18,5 +18,9 @@ class Log:
         Log._logger.warning(msg)
 
     @staticmethod
+    def warn(msg: str) -> None:
+        Log.warning(msg)
+
+    @staticmethod
     def error(msg: str) -> None:
         Log._logger.error(msg)

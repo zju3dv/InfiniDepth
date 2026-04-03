@@ -1,0 +1,87 @@
+pts_num: 1500
+crop_resize_transforms: &crop_resize_transforms
+  - _target_: training.dataset.depth_estimation.transform.Crop_Resize
+    height: 512
+    width: 672
+    resize_prompt: True
+    resize_target: True
+  - _target_: training.dataset.depth_estimation.transform.RapidSampleQueryPairs
+    geometry_type: disparity
+    split: val
+  - _target_: training.dataset.depth_estimation.transform.PrepareForNet
+  - _target_: training.dataset.depth_estimation.transform.RandomSample
+    pts_num: ${pts_num}
+data:
+  _target_: training.datamodule.general_datamodule.GeneralDataModule
+  val_dataset:
+    dataset_opts:
+      - _target_: training.dataset.depth_estimation.kitti.Dataset
+        data_root: ${oc.env:commonspace}/datasets/Kitti
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/Kitti/val.txt
+        frames: [0, -1, 1]
+        dataset_name: 'kitti_resize'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.eth3d.Dataset
+        data_root: ${oc.env:commonspace}/datasets/ETH3D
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/ETH3D/val.txt
+        frames: [0, -1, 1]
+        dataset_name: 'eth3d_resize'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.nyu.Dataset
+        data_root: ${oc.env:commonspace}/datasets/nyu
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/nyu/val.txt
+        frames: [0, -1, 1]
+        dataset_name: 'nyu'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.scannet.Dataset
+        data_root: ${oc.env:commonspace}/datasets/scannet
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/scannet/val.txt
+        frames: [0, -1, 1]
+        dataset_name: 'scannet'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.diode.Dataset
+        data_root: ${oc.env:commonspace}/datasets/DIODE
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/DIODE/val.txt
+        frames: [0, -1, 1]
+        dataset_name: 'diode_indoor'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.synth4k.Dataset
+        data_root: ${oc.env:commonspace}/datasets/game4k/cyberpunk
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/cyberpunk/val_new.txt
+        frames: [0, -1, 1]
+        dataset_name: 'cyberpunk'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.synth4k.Dataset
+        data_root: ${oc.env:commonspace}/datasets/game4k/spiderman2
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/spiderman2/val_new.txt
+        frames: [0, -1, 1]
+        dataset_name: 'spiderman2'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.synth4k.Dataset
+        data_root: ${oc.env:commonspace}/datasets/game4k/spidermanmm
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/spidermanmm/val_new.txt
+        frames: [0, -1, 1]
+        dataset_name: 'spidermanmm'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.synth4k.Dataset
+        data_root: ${oc.env:commonspace}/datasets/game4k/deadisland
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/deadisland/val_new.txt
+        frames: [0, -1, 1]
+        dataset_name: 'deadisland'
+        transforms: *crop_resize_transforms
+      - _target_: training.dataset.depth_estimation.synth4k.Dataset
+        data_root: ${oc.env:commonspace}/datasets/game4k/watchdoglegion
+        split: 'val'
+        meta_path: ${oc.env:commonspace}/processed_datasets/watchdoglegion/val_new.txt
+        frames: [0, -1, 1]
+        dataset_name: 'watchdoglegion'
+        transforms: *crop_resize_transforms

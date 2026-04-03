@@ -1,0 +1,7 @@
+__object__:
+  path: common.evaluation.metrics
+  name: CLIPScore
+  args: as_params
+
+extractor_path: ???
+resolution: ???

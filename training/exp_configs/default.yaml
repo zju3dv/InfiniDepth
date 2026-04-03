@@ -1,0 +1,40 @@
+# Default Configuration
+print_cfg: False
+task: depth_estimation
+seed: 42
+exp_name: test
+resume_training: True
+finetune_only: False
+confirm_delete_previous_dir: False
+output_dir: ${oc.env:workspace}/outputs/${task}/${exp_name}
+
+# PyTorch Lightning Configuration
+pl_trainer:
+  devices: 8
+  num_nodes: 1
+  num_sanity_val_steps: 0
+  max_epochs: 1000
+  limit_train_batches: 2000
+  log_every_n_steps: 50
+  strategy: ddp_find_unused_parameters_true
+
+# PyTorch Lightning Callbacks
+callbacks:
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: ${output_dir}/checkpoints/
+    filename: "e{epoch:03d}-s{step:06d}"
+    save_top_k: 1
+    auto_insert_metric_name: False
+    save_weights_only: False
+    every_n_epochs: 1
+  lr_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+
+# Logger Configuration
+logger:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: ${output_dir}
+  name: ''
+  version: 'tb'

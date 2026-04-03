@@ -45,6 +45,8 @@
 </div>
 
 ## 📢 News
+> **[2026-04]** 🎉 Training and evaluation code of InfiniDepth (RGB Only & Depth Sensor Augmentation) is available now!
+
 > **[2026-03]** 🎉 Inference code of InfiniDepth (RGB Only & Depth Sensor Augmentation) is available now!
 
 > **[2026-02]** 🎉 InfiniDepth has been accepted to CVPR 2026! Code coming soon!
@@ -411,6 +413,203 @@ bash example_scripts/infer_depth/waymo_multi_view_infinidepth_explicit_camera.sh
 | `inference_depth.py` point clouds | `pred_pcd/` next to your input data folder |
 | `inference_gs.py` gaussians and videos | `pred_gs/` next to your input data folder |
 | `inference_multi_view_depth.py` sequence outputs | `pred_sequence/<sequence_name>/` next to your input data folder |
+
+</details>
+
+## 🏋️ Training and Validation
+First, prepare the training/validation data and the pretrained weight as described in [DATA.md](DATA.md).
+
+The repo also provides `main.py` training and validation entrypoints for InfiniDepth and InfiniDepth_DepthSensor.
+
+Before running any command, export the environment variables required by `main.py`:
+
+```bash
+export workspace=/path/to/your/experiments
+export commonspace=/path/to/your/common_space
+```
+
+- `workspace` stores experiment outputs under `outputs/<task>/<exp_name>/`
+- `commonspace` stores datasets and pretrained weights shared across experiments
+
+
+### Quick Command Index
+
+| If you want ... | Recommended command |
+| --- | --- |
+| Fine-tune from an existing checkpoint | Add `ckpt_path=...` to the training command |
+| Train from scratch | Omit `ckpt_path` and use a fresh `exp_name` |
+| Validate on the mixed real-data benchmark | Run `main.py` with `--entry val` |
+
+<details>
+<summary><strong>1. Fine-Tuning from an Existing Checkpoint</strong> (<code>main.py</code>, default <code>train_net</code> entry)</summary>
+
+Use this when you want to initialize training from an existing InfiniDepth checkpoint. The training config referenced below uses Hypersim as the training set and runs validation on a mixed real-data benchmark at the end of each epoch.
+
+**Required environment**
+
+- `workspace=/path/to/your/experiments`
+- `commonspace=/path/to/your/common_space`
+
+**RGB-Only Fine-Tuning Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth.yaml \
+  --include training/exp_configs/components/data/train/infinidepth_train_hypersim.yaml \
+  ckpt_path=checkpoints/depth/infinidepth.ckpt \
+  exp_name=finetune_infinidepth_on_hypersim \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=8
+```
+
+**RGB + Depth Sensor Fine-Tuning Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth_depthsensor.yaml \
+  --include training/exp_configs/components/data/train/infinidepth_train_hypersim.yaml \
+  ckpt_path=checkpoints/depth/infinidepth_depthsensor.ckpt \
+  exp_name=finetune_infinidepth_depthsensor_on_hypersim \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=8
+```
+
+**Equivalent launch scripts**
+
+```bash
+bash launch_scripts/train/infinidepth.sh
+bash launch_scripts/train/infinidepth_depthsensor.sh
+```
+
+**Outputs**
+
+- `${workspace}/outputs/${task}/${exp_name}/checkpoints/` for saved checkpoints
+- `${workspace}/outputs/${task}/${exp_name}/tb/` for TensorBoard logs
+
+**Notes**
+
+- `ckpt_path` must point to an existing checkpoint.
+- The training data config is `training/exp_configs/components/data/train/infinidepth_train_hypersim.yaml`.
+- If the same `exp_name` already has checkpoints in `${workspace}/outputs/${task}/${exp_name}/checkpoints/`, training will resume from the latest saved checkpoint in that directory.
+
+</details>
+
+<details>
+<summary><strong>2. Train from Scratch</strong> (<code>main.py</code>, no <code>ckpt_path</code>)</summary>
+
+Use this when you want to start training without loading an InfiniDepth `.ckpt`. In this mode, do not pass `ckpt_path`. The model will still load the DINOv3 backbone from `${commonspace}/pretrained_models/dinov3/`. You need to download the DINOv3 weights yourself and place them there before running.
+
+**RGB-Only Training-from-Scratch Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth.yaml \
+  --include training/exp_configs/components/data/train/infinidepth_train_hypersim.yaml \
+  exp_name=train_infinidepth_from_scratch \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=2
+```
+
+**RGB + Depth Sensor Training-from-Scratch Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth_depthsensor.yaml \
+  --include training/exp_configs/components/data/train/infinidepth_train_hypersim.yaml \
+  exp_name=train_infinidepth_depthsensor_from_scratch \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=2
+```
+
+**Notes**
+
+- Use a new `exp_name` for a clean scratch run.
+- If you intentionally want to reuse an old `exp_name`, set `resume_training=False` to prevent automatic resume. Be careful: when `resume_training=False`, the code will delete the old output directory before training.
+
+</details>
+
+<details>
+<summary><strong>3. Validation from a Checkpoint</strong> (<code>main.py</code> with <code>--entry val</code>)</summary>
+
+Use this when you want to run validation metrics on the mixed real-data benchmark defined in `training/exp_configs/components/data/test/infinidepth_mix_data.yaml`.
+
+**RGB-Only Validation Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth.yaml \
+  --include training/exp_configs/components/data/test/infinidepth_mix_data.yaml \
+  --entry val \
+  ckpt_path=checkpoints/depth/infinidepth.ckpt \
+  exp_name=eval_infinidepth \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=2
+```
+
+**RGB + Depth Sensor Validation Command**
+
+```bash
+python3 main.py \
+  --cfg_file training/exp_configs/exps/infinidepth_depthsensor.yaml \
+  --include training/exp_configs/components/data/test/infinidepth_mix_data.yaml \
+  --entry val \
+  ckpt_path=checkpoints/depth/infinidepth_depthsensor.ckpt \
+  exp_name=eval_infinidepth_depthsensor \
+  model.compute_abs_metric=True \
+  model.save_orig_pred=True \
+  model.save_metrics=True \
+  pl_trainer.devices=2
+```
+
+**Reference launch scripts**
+
+```bash
+bash launch_scripts/eval/infinidepth.sh
+bash launch_scripts/eval/infinidepth_depthsensor.sh
+```
+
+**Validation datasets**
+
+- Kitti val split
+- ETH3D val split
+- NYU val split
+- ScanNet val split
+- DIODE indoor val split
+- Synth4K (CyberPunk, DeadIsland, SpiderMan2, SpiderManMM, WatchDogLegion)
+
+These datasets are read from `${commonspace}/datasets/` using the meta files referenced in `training/exp_configs/components/data/test/infinidepth_mix_data.yaml`.
+
+**Outputs**
+
+- `${workspace}/outputs/${task}/${exp_name}/val_metrics/` for validation logs
+- `${workspace}/outputs/${task}/${exp_name}/default/metrics/metrics.json` for aggregated validation metrics
+- `${workspace}/outputs/${task}/${exp_name}/default/metrics/all_scenes.csv` when `model.save_metrics=True`
+
+</details>
+
+<details>
+<summary><strong>4. Common Overrides</strong></summary>
+
+| Argument | What it controls |
+| --- | --- |
+| `ckpt_path` | Initialization or evaluation checkpoint path. Omit it for training from scratch. |
+| `exp_name` | Experiment name used to build `${workspace}/outputs/${task}/${exp_name}`. |
+| `pl_trainer.devices` | Number of GPUs used by PyTorch Lightning. |
+| `model.compute_abs_metric` | Enable absolute-metric evaluation during training or validation. |
+| `model.save_orig_pred` | Save original prediction outputs alongside logs and metrics. |
+| `model.save_metrics` | Save metric files for later inspection. |
+| `--entry val` | Switch `main.py` from the default training entry to the validation entry. |
+| `--include` | Merge an extra data config, such as `training/exp_configs/components/data/test/infinidepth_mix_data.yaml`. |
 
 </details>
 
