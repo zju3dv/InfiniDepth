@@ -1,0 +1,127 @@
+[project]
+name = "infinidepth"
+version = "0.1.0"
+description = "InfiniDepth"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+license = { file = "LICENSE" }
+
+dependencies = [
+    # PyTorch and related packages (CUDA 12.8 on Linux / Windows, CPU wheels on macOS)
+    "torch==2.9.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torch==2.9.0; sys_platform == 'darwin'",
+    "torchvision==0.24.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision==0.24.0; sys_platform == 'darwin'",
+    "torchaudio==2.9.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchaudio==2.9.0; sys_platform == 'darwin'",
+    "xformers==0.0.33.post1; sys_platform == 'linux' or sys_platform == 'win32'",
+
+    # Transformers and AI models
+    "huggingface-hub>=0.24.0",
+    "timm",
+    "lpips",
+    "tyro",
+
+    # Data processing and scientific computing
+    "numpy<2.0",
+    "pandas",
+    "einops>=0.4.1",
+    "h5py",
+    "omegaconf",
+    "dacite",
+    "hydra-core",
+    "scikit-learn",
+
+    # Computer vision and graphics
+    "opencv-python",
+    "scikit-image",
+    "imageio",
+    "imageio[ffmpeg]",
+    "moviepy==1.0.3",
+    "matplotlib",
+    "plyfile",
+    "open3d",
+    "OpenEXR",
+
+    # 3D
+    "viser",
+    "e3nn",
+    "roma",
+
+    # Metrics and evaluation
+    "torchmetrics",
+    "fvcore",
+    "iopath",
+
+    # Training frameworks
+    "pytorch-lightning",
+
+    # Logging and monitoring
+    "wandb",
+    "tensorboard",
+    "rich",
+    "tqdm",
+    "colorama",
+    "termcolor",
+
+    # Utilities
+    "jaxtyping",
+    "beartype",
+    "bidict",
+    "tabulate",
+    "svg-py",
+    "sk-video",
+    "ipdb",
+    "pdbr",
+    "ffmpeg-python",
+    "colorspacious",
+    "regex",
+
+    # simple skymask
+    "onnxruntime",
+
+    # Gradio app
+    "gradio>=4.44.0",
+    "plotly>=5.22.0",
+    "spaces",
+    "trimesh>=4.4.0",
+
+    # Waymo dataset
+    "protobuf==3.20.2",
+
+    # External git dependencies
+    "moge",
+    "gsplat",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["InfiniDepth"]
+
+[tool.uv.extra-build-dependencies]
+# gsplat builds CUDA extensions at install time and needs torch present.
+gsplat = ["torch==2.9.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchaudio = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+xformers = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+moge = { git = "https://github.com/microsoft/MoGe.git" }
+gsplat = { git = "https://github.com/nerfstudio-project/gsplat.git" }
