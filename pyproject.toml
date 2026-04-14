@@ -95,7 +95,7 @@ dependencies = [
     # External git dependencies
     "moge",
     "gsplat",
-    "t4-devkit",
+
 ]
 
 [build-system]
@@ -129,4 +129,4 @@ xformers = [
 ]
 moge = { git = "https://github.com/microsoft/MoGe.git" }
 gsplat = { git = "https://github.com/nerfstudio-project/gsplat.git" }
-t4-devkit = { git = "https://github.com/tier4/t4-devkit.git", tag = "v0.6.0" }
+
