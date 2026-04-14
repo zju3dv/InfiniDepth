@@ -15,6 +15,31 @@ mamba activate infinidepth
 
 ### 2) Install dependencies
 
+#### Option A: Resolve everything from `pyproject.toml` with `uv sync` (recommended)
+
+This repository's `pyproject.toml` already declares every dependency, including the PyTorch CUDA 12.8 index and the git sources for MoGe, gsplat, and t4-devkit. With `uv` installed, you can create a virtual environment and resolve all dependencies in a single command.
+
+```bash
+# Install uv (only if you don't have it yet)
+pip install uv
+
+# Read pyproject.toml / uv.lock, create a .venv, and install all dependencies
+uv sync
+
+# Activate the virtual environment
+source .venv/bin/activate
+```
+
+Notes:
+- `uv sync` automatically creates `.venv` and resolves PyTorch (cu128) and the git dependencies (MoGe / gsplat / t4-devkit) according to `[tool.uv.sources]` and `[[tool.uv.index]]` in `pyproject.toml`.
+- If you prefer to install into an existing conda/mamba environment instead of a new `.venv`, pass `uv sync --active` to target the currently active interpreter.
+- `gsplat` builds CUDA extensions at install time, so make sure `nvcc` / CUDA Toolkit 12.8 and a compatible `g++` are available (see the optional commands in "1) Create environment").
+- Run `uv lock --upgrade` when you want to refresh the lock file.
+
+#### Option B: Install packages individually with `uv pip`
+
+If you'd rather install packages one by one (similar to a plain `pip` workflow) without going through `pyproject.toml`, use the following steps.
+
 ```bash
 # Create environment
 pip install uv
